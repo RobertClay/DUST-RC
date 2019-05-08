@@ -15,6 +15,12 @@ import multiprocessing
 from filterpy.kalman import MerweScaledSigmaPoints as MSSP
 from filterpy.kalman import UnscentedKalmanFilter as UNKF
 from filterpy.common import Q_discrete_white_noise as QDWN
+from scipy.spatial import distance as dist
+import matplotlib.pyplot as plt
+import datetime
+import time
+from tqdm import tqdm as tqdm
+
 """
 UKF trajectory
 """
@@ -108,8 +114,9 @@ class UKF:
             if self.M[self.time_id,j] == 0.5:
                 "initialise"
                 sigmas = MSSP(n=2,alpha=.1,beta=.2,kappa=1)
-                UKF_histories[j] = []
-                UKF_histories[j].append(np.array([0,0]))
+                
+                self.UKF_histories[j] = []
+                self.UKF_histories[j].append(agent.entrance)
                 
                 self.UKFs[j] =  UNKF(dim_x=2,dim_z=2,fx = self.F_x, hx=self.H_x, dt=1, points=sigmas)
                 self.UKFs[j].x = agent.entrance
@@ -120,25 +127,92 @@ class UKF:
                 self.UKFs[j].predict(agent)
                 z = agent.location
                 self.UKFs[j].update(z)#!
+                self.UKF_histories[j].append(self.UKFs[j].x)
+
 
             elif self.M[self.time_id,j] == 1:
                 
                 self.UKFs[j].predict(agent)
                 z = agent.location
                 self.UKFs[j].update(z)#!
-                "update"
+                self.UKF_histories[j].append(self.UKFs[j].x)
+
+                
                 
     def batch(self):
-        for _ in range(self.number_of_iterations-1):
+        time1 = datetime.datetime.now()
+        for _ in tqdm(range(self.number_of_iterations-1)):
             self.step()
             self.updates()
-    
+        time2 = datetime.datetime.now()
+        
+        print(time2-time1)
         return
 
+    def plots(self):
+        a = UKF.UKF_histories
+        b = {}
+        for k in range(model_params["pop_total"]):
+            b[k] =  UKF.base_model.agents[k].history_loc
+        
+        
+        
+        
+        
+        
+        plt.figure()
+        
+        
+        for j in range(model_params["pop_total"]):
+            a1 = np.vstack(a[j])
+            plt.plot(a1[:,0],a1[:,1])
+            
+        
+        plt.figure()
+        
+        for j in range(model_params["pop_total"]):
+            b1 = np.vstack(b[j])
+            plt.plot(b1[:,0],b1[:,1])
+            
+          
+        errors = True
+        if errors:
+            plt.figure()    
+                
+            c = {}
+            c_means = []
+            for j in range(model_params["pop_total"]):
+                a1 = np.vstack(a[j])
+                b1 = np.vstack(b[j])
+                
+                c[j] = []
+                for k in range(a1.shape[0]-1):
+                    c[j].append(dist.euclidean(a1[k+1],b1[k]))
+                    
+                c_means.append(np.mean(c[j]))
+                
+                plt.plot(np.vstack(c[j]))
+                
+                
+                
+                
+            plt.figure()
+            
+            
+            
+            index = np.where(c_means==np.max(c_means))[0][0]
+            a1 = np.vstack(a[index])
+            plt.plot(a1[:,0],a1[:,1])
+            
+            b1 = np.vstack(b[index])
+            plt.plot(b1[:,0],b1[:,1])
+            
+        
+        
 model_params = {
         'width': 200,
         'height': 100,
-        'pop_total':2,
+        'pop_total':1000,
         'entrances': 3,
         'entrance_space': 2,
         'entrance_speed': .5,
@@ -152,7 +226,10 @@ model_params = {
         'do_save': True,
         'do_ani': True,
         }
+
+
 UKF = UKF(Model, model_params)
-print(UKF.batch())
-a = UKF.UKFs
-b = UKF.base_model.agents[0].location
+UKF.batch()
+UKF.plots()
+
+
