@@ -379,8 +379,8 @@ if __name__ == '__main__':
         'width': 200,
         'height': 100,
         'pop_total':1000,
-        'entrances': 3,
-        'entrance_space': 2,
+        'entrances': 4,
+        'entrance_space': 3,
         'entrance_speed': .1,
         'exits': 2,
         'exit_space': 1,
@@ -412,7 +412,6 @@ if __name__ == '__main__':
 #        prof.print_stats()
         
         
-
 
 
 

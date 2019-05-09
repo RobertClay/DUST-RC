@@ -43,17 +43,13 @@ class UKF:
     def __init__(self,Model,params):
         self.params = params
         self.pop_total = self.params["pop_total"]
-        #self.agents = list([Agent(self, unique_id) for unique_id in range(self.pop_total)])
         self.time_id = 0
-        self.step_id = 0
         self.number_of_iterations = params['batch_iterations']
         self.base_model = Model(params)
-        self.dimensions = len(self.base_model.agents2state())
         self.UKFs = {} #dictionary of KFs for each agent
         self.UKF_histories = {}
         self.M = np.zeros((params["batch_iterations"],params["pop_total"]))
         self.MC = np.zeros((params["pop_total"],params["batch_iterations"]))
-        self.base_model.agents
         
 
     def step(self):
@@ -197,22 +193,24 @@ class UKF:
                 
                 
             plt.figure()
-            
-            
-            
             index = np.where(c_means==np.max(c_means))[0][0]
             a1 = np.vstack(a[index])
-            plt.plot(a1[:,0],a1[:,1])
-            
             b1 = np.vstack(b[index])
-            plt.plot(b1[:,0],b1[:,1])
+            plt.plot(b1[:,0],b1[:,1],label= "True Path")
+            plt.plot(a1[:,0],a1[:,1],label = "KF Prediction")
+            plt.legend()
             
+            return a,b,c_means
         
-        
-model_params = {
+     
+
+
+
+if __name__ == "__main__":
+    model_params = {
         'width': 200,
         'height': 100,
-        'pop_total':1000,
+        'pop_total':100,
         'entrances': 3,
         'entrance_space': 2,
         'entrance_speed': .5,
@@ -227,9 +225,8 @@ model_params = {
         'do_ani': True,
         }
 
-
-UKF = UKF(Model, model_params)
-UKF.batch()
-UKF.plots()
+    UKF = UKF(Model, model_params)
+    UKF.batch()
+    a,b,c_means = UKF.plots()
 
 
