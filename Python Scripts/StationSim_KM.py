@@ -385,7 +385,7 @@ class Model:
         model_params = {
             'width': 200,
             'height': 100,
-            'pop_total': 1000,
+            'pop_total': 300,
             'entrances': 3,
             'entrance_space': 2,
             'entrance_speed': 1,

@@ -72,7 +72,8 @@ class UKF:
             if self.M[self.time_id,j] == 1 and self.MC[self.time_id,j] ==1 : #which active for first time
                 self.M[self.time_id,j] = 0.5
         
-    
+        self.finished = np.sum(self.M[self.time_id,:] ==2)#finished agents counter for break in batch.
+
         return 
 
   
@@ -140,6 +141,10 @@ class UKF:
         for _ in tqdm(range(self.number_of_iterations-1)):
             self.step()
             self.updates()
+            if self.finished == self.pop_total:
+                time2 = datetime.datetime.now()
+                print(time2-time1)
+                break
         time2 = datetime.datetime.now()
         
         print(time2-time1)
@@ -210,7 +215,7 @@ if __name__ == "__main__":
     model_params = {
         'width': 200,
         'height': 100,
-        'pop_total':100,
+        'pop_total':1500,
         'entrances': 3,
         'entrance_space': 2,
         'entrance_speed': .5,
