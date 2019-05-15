@@ -15,97 +15,60 @@ from scipy.spatial import distance as dist
 
 
 if __name__ == "__main__":
-    
-    a = pd.read_csv("Actual_tracks.csv",dtype = str)
-    a = a.drop(a.columns[0],axis=1)
-    
-    
-    plt.figure()
-    
-    for item in a.columns:
-        a_j = []
-        for item2 in a[item]:
-            if type(item2)!=float:
-                item2 = item2[1:len(item2)-1]
-                item2 = [float(x) for x in item2.split()]
-                a_j.append(np.array(item2))
-            
-            
-        a_j = np.vstack(a_j)
-        plt.plot(a_j[:,0],a_j[:,1])
-        
-        
-    
-    b = pd.read_csv("UKF_tracks.csv",dtype = str)
-    b = b.drop(b.columns[0],axis=1)
+    pop_total = 300
+    a = np.load(f"UKF_TRACKS_{pop_total}.npy")
+    b =  np.load(f"ACTUAL_TRACKS_{pop_total}.npy")
     
     plt.figure()
-    
-    for item in b.columns:
-        b_j = []
-        for item2 in b[item]:
-            if type(item2)!=float:
-                item2 = item2[1:len(item2)-1]
-                item2 = [float(x) for x in item2.split()]
-                b_j.append(np.array(item2))
-            
-        b_j = np.vstack(b_j)
-        plt.plot(b_j[:,0],b_j[:,1])
-        
-        
-     
-    c = {}
-    c_means = []
-    
-    
-    for item in a.columns:
-        a_j = []
-        b_j= []
-        for item2 in a[item]:
-            if type(item2)!=float:
-                item2 = item2[1:len(item2)-1]
-                item2 = [float(x) for x in item2.split()]
-                a_j.append(np.array(item2))
-        
-        for item2 in b[item]:
-            if type(item2)!=float:
-                item2 = item2[1:len(item2)-1]
-                item2 = [float(x) for x in item2.split()]
-                b_j.append(np.array(item2))
-    
-    
-        a_j = np.vstack(a_j)
-        b_j = np.vstack(b_j)
-    
-        c[item] = []
-        for k in range(a_j.shape[0]-1):
-            c[item].append(dist.euclidean(a_j[k+1],b_j[k]))
-            
-        c_means.append(np.mean(c[item]))
-        
-        
-        
-        
-    lens = [len(l) for l in c.values()]      # only iteration
-    maxlen=max(lens)
-    arr = np.zeros((len(c.values()),maxlen),int)
-    mask = np.arange(maxlen) < np.array(lens)[:,None] # key line
-    
-    
-    arr[mask] = np.concatenate(list(c.values()))    # fast 1d assignment
-    
+    for j in range(int(a.shape[1]/2)):
+        plt.plot(a[:,2*j],a[:,(2*j)+1])    
     
     plt.figure()
-    ct = np.mean(arr,axis=0)
-    plt.plot(ct)
-    plt.xlabel("time")
-    plt.ylabel("Mean average error (MAE)")
+    for j in range(int(a.shape[1]/2)):
+        plt.plot(b[:,2*j],b[:,(2*j)+1])    
+
+        
+    errors = True
+    if errors:
+        
+        "find mean error between agent and prediction"
+        c = {}
+        c_means = []
         
         
-        
-        
-        
+        for i in range(int(b.shape[1]/2)):
+            a_2 =   a[:,(2*i):(2*i)+2] 
+            b_2 =   b[:,(2*i):(2*i)+2] 
     
+
+            c[i] = []
+            for k in range(a_2.shape[0]):
+                if np.isnan(b_2[k,0]) or np.isnan(b_2[k,1]):
+                    c[i].append(np.nan)
+                else:                       
+                    c[i].append(dist.euclidean(a_2[k,:],b_2[k,:]))
+                
+            c_means.append(np.nanmean(c[i]))
+        
+        c = np.vstack(c.values())
+        time_means = np.nanmean(c,axis=0)
+        plt.figure()
+        plt.plot(time_means)
+            
+    
+            
+            
+        index = np.where(c_means == np.nanmax(c_means))[0][0]
+        print(index)
+        a1 = a[:,(2*index):(2*index)+2]
+        b1 = b[:,(2*index):(2*index)+2]
+        plt.figure()
+        plt.plot(b1[:,0],b1[:,1],label= "True Path")
+        plt.plot(a1[:,0],a1[:,1],label = "KF Prediction")
+        plt.legend()
+    
+    
+
     
     
     

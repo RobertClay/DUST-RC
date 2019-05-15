@@ -36,7 +36,6 @@ import pandas as pd
 
 
 
-
     
 class UKF:
     """
@@ -261,7 +260,7 @@ if __name__ == "__main__":
     model_params = {
                 'width': 200,
                 'height': 100,
-                'pop_total': 300,
+                'pop_total': 700,
                 'entrances': 3,
                 'entrance_space': 2,
                 'entrance_speed': 1,
