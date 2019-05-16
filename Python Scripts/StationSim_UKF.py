@@ -39,8 +39,7 @@ class Agent:
         self.location = model.loc_entrances[np.random.randint(model.entrances)]
         self.location[1] += model.entrance_space * (np.random.uniform() - .5)
         self.loc_desire = model.loc_exits[np.random.randint(model.exits)]
-        self.entrance = self.location
-        self.ideal_location = self.entrance
+        self.ideal_location = self.location
         # Parameters
         # model.entrance_speed -> the rate at which agents enter
         # self.time_activate -> the time at which the agent should become active
@@ -123,11 +122,13 @@ class Agent:
         without causing a colision with another agent.
         """
         
-        self.ideal_location = Agent.lerp(self.loc_desire,self.location,self.speed_desire)
         
         for speed in self.speeds:
             # Direct
             new_location = Agent.lerp(self.loc_desire, self.location, speed)
+            if speed == self.speed_desire:
+                self.ideal_location = new_location
+
             if not Agent.collision(model, new_location):
                 break
             elif speed == self.speeds[-1]:

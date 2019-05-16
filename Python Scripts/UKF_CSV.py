@@ -16,8 +16,9 @@ from scipy.spatial import distance as dist
 
 if __name__ == "__main__":
     pop_total = 300
-    a = np.load(f"UKF_TRACKS_{pop_total}.npy")
-    b =  np.load(f"ACTUAL_TRACKS_{pop_total}.npy")
+    j = 1
+    a = np.load(f"UKF_TRACKS_{pop_total}_{j}.npy")
+    b =  np.load(f"ACTUAL_TRACKS_{pop_total}_{j}.npy")
     
     plt.figure()
     for j in range(int(a.shape[1]/2)):

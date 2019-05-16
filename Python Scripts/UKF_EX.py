@@ -10,7 +10,6 @@ UKF with one state
 
 
 import os
-os.chdir("/home/rob/DUST-RC/Python Scripts")
 import numpy as np
 from StationSim_UKF import Model, Agent
 from filterpy.kalman import MerweScaledSigmaPoints as MSSP
@@ -35,18 +34,17 @@ class UKF:
     
     """
     
-    def __init__(self,Model,model_params,filter_params):
-        self.model_params = model_params
-        self.filter_params = filter_params
-        self.pop_total = self.model_params["pop_total"]
+    def __init__(self,Model,params):
+        self.params = params
+        self.pop_total = self.params["pop_total"]
         self.time_id = 0
-        self.number_of_iterations = model_params['batch_iterations']
-        self.base_model = Model(model_params)
+        self.number_of_iterations = params['batch_iterations']
+        self.base_model = Model(params)
         self.UKF = None #dictionary of KFs for each agent
         self.UKF_histories = []
         self.finished = 0 #number of finished agents
-        self.sample_rate = self.filter_params["sample_rate"]
-              
+        self.sample_rate = self.params["sample_rate"]
+        
   
 
     def F_x(x,dt,self):
@@ -85,14 +83,14 @@ class UKF:
         sigmas = MSSP(n=len(state),alpha=.00001,beta=.2,kappa=1) #sigmapoints
         self.ukf =  UNKF(dim_x=len(state),dim_z=len(state),fx = self.F_x, hx=self.H_x, dt=1, points=sigmas)#init UKF
         self.ukf.x = state #initial state
-        self.ukf.R = np.eye(len(state))*self.filter_params["Sensor_Noise"] #sensor noise. larger noise implies less trust in sensor and to favour prediction
+        self.ukf.R = np.eye(len(state))*self.params["Sensor_Noise"] #sensor noise. larger noise implies less trust in sensor and to favour prediction
         self.ukf.Q = np.zeros((len(state),len(state)))
         self.ukf.P = np.eye(len(state))
         
         for i in range(int(len(state)/2)):  #! initialise process noise as blocked structure of discrete white noise. cant think of any better way to do this
             i1 = 2*i
             i2 = (2*(i+1))
-            self.ukf.Q[i1:i2,i1:i2] =  QDWN(2,dt=1,var=self.filter_params["Process_Noise"])
+            self.ukf.Q[i1:i2,i1:i2] =  QDWN(2,dt=1,var=self.params["Process_Noise"])
              
         self.ukf.Q = np.eye(len(state))
 
@@ -102,12 +100,18 @@ class UKF:
         step agents. step UKF. calculate gain using predictions and actual and update UKF agent positions
         """
         self.base_model.step() #jump agents forward using actual position
+        agents = self.base_model.agents
         
         self.ukf.predict(self)
         state = self.base_model.agents2state()
         self.ukf.update(z=state)
         self.UKF_histories.append(self.ukf.x)
-     
+        #self.finished = 0
+        #for agent in agents:
+        #    if agent.active==2:
+        #        self.finished+=1
+       
+            
         return
                 
     
@@ -227,12 +231,12 @@ class UKF:
     
     
 if __name__ == "__main__":
-    runs = 1
+    runs = 10
     
     model_params = {
                     'width': 200,
                     'height': 100,
-                    'pop_total': 50,
+                    'pop_total': 10,
                     'entrances': 3,
                     'entrance_space': 2,
                     'entrance_speed': 1,
@@ -243,29 +247,25 @@ if __name__ == "__main__":
                     'speed_desire_std': 1,
                     'separation': 4,
                     'wiggle': 1,
+                    "Sensor_Noise": 2,
+                    "Process_Noise": 2,
                     'batch_iterations': 10000,
+                    'sample_rate': 5,
                     'do_save': True,
                     'do_plot': True,
                     'do_ani': False
                     }
         
-    filter_params = {         
-                    "Sensor_Noise": 2,
-                    "Process_Noise": 10,
-                    'sample_rate': 5,
-                    }
-        
     
-
 
     
     for i in range(runs):
        
-        U = UKF(Model, model_params,filter_params)
+        U = UKF(Model, model_params)
         U.batch()
-        if runs==1:   
-            U.plots()
+        #U.plots()
         a,b = U.save_histories()
         pop = model_params["pop_total"]
         np.save(f"UKF_TRACKS_{pop}_{i}",a)
         np.save(f"ACTUAL_TRACKS_{pop}_{i}",b)
+
