@@ -16,7 +16,7 @@ from scipy.spatial import distance as dist
 
 if __name__ == "__main__":
     pop_total = 300
-    j = 1
+    j = 0
     a = np.load(f"UKF_TRACKS_{pop_total}_{j}.npy")
     b =  np.load(f"ACTUAL_TRACKS_{pop_total}_{j}.npy")
     
@@ -57,8 +57,8 @@ if __name__ == "__main__":
         plt.plot(time_means)
             
     
-            
-            
+    worst = False
+    if worst and errors:       
         index = np.where(c_means == np.nanmax(c_means))[0][0]
         print(index)
         a1 = a[:,(2*index):(2*index)+2]
